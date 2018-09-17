@@ -32,6 +32,8 @@ class TabButtonCell: NSButtonCell {
         get { return self.menu?.items.count > 0 }
     }
 
+    var showsCloseButton: Bool = false
+
     var buttonPosition: TabPosition = .middle {
         didSet { self.controlView?.needsDisplay = true }
     }
@@ -72,6 +74,10 @@ class TabButtonCell: NSButtonCell {
         let path = Bundle(for: self).pathForImageResource(NSImage.Name(rawValue: "KPCPullDownTemplate"))!
         return NSImage(contentsOfFile: path)!.imageWithTint(NSColor.darkGray)
     }
+    static func closeImage() -> NSImage {
+        let path = Bundle(for: self).pathForImageResource(NSImage.Name(rawValue: "KPCTabPlusTemplate"))!
+        return NSImage(contentsOfFile: path)!.imageWithTint(NSColor.darkGray)
+    }
 
     func hasRoomToDrawFullTitle(inRect rect: NSRect) -> Bool {
         let title = self.style.attributedTitle(content: self.title, selectionState: self.selectionState)
@@ -95,6 +101,13 @@ class TabButtonCell: NSButtonCell {
         popupRect.origin = NSMakePoint(NSMaxX(cellFrame) - NSWidth(popupRect) - 8, NSMidY(cellFrame) - NSHeight(popupRect) / 2)
         return popupRect
     }
+
+    fileprivate func closeRectWithFrame(_ cellFrame: NSRect) -> NSRect {
+        var popupRect = NSZeroRect
+        popupRect.size = TabButtonCell.closeImage().size
+        popupRect.origin = NSMakePoint(NSMaxX(cellFrame) - NSWidth(popupRect) - 8, NSMidY(cellFrame) - NSHeight(popupRect) / 2)
+        return popupRect
+    }
     
     override func trackMouse(with theEvent: NSEvent,
                              in cellFrame: NSRect,
@@ -114,6 +127,11 @@ class TabButtonCell: NSButtonCell {
                                                     at: NSMakePoint(NSMidX(popupRect), NSMaxY(popupRect)),
                                                     in: controlView)
                 
+                return true
+            }
+
+            let closeRect = self.closeRectWithFrame(cellFrame)
+            if NSPointInRect(location, closeRect) {
                 return true
             }
         }
@@ -184,6 +202,9 @@ class TabButtonCell: NSButtonCell {
 
         if self.showsMenu {
             self.drawPopupButtonWithFrame(frame)
+
+        } else if self.showsCloseButton {
+            self.drawCloseButtonWithFrame(frame)
         }
     }
 
@@ -201,5 +222,15 @@ class TabButtonCell: NSButtonCell {
                          fraction: 1.0,
                          respectFlipped: true,
                          hints: nil)
+    }
+
+    fileprivate func drawCloseButtonWithFrame(_ frame: NSRect) {
+        let image = TabButtonCell.closeImage()
+        image.draw(in: self.popupRectWithFrame(frame),
+                   from: NSZeroRect,
+                   operation: .sourceOver,
+                   fraction: 1.0,
+                   respectFlipped: true,
+                   hints: nil)
     }
 }
